@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,6 +18,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void loadFileToPlaylist(const QString& filename);
 private slots:
     void on_pushButton_Add_clicked();
 
@@ -30,8 +33,6 @@ private slots:
 
     void on_pushButton_Pause_clicked();
 
-    void on_pushButton_Next_clicked();
-
     void on_horizontalSlider_Volume_valueChanged(int value);
 
     void on_diration_changet(qint64 duration);
@@ -43,5 +44,10 @@ private slots:
 private:
     Ui::MainWindow *ui;
     QMediaPlayer* m_player;
+    QMediaPlaylist *m_playlist;
+    QStandardItemModel *m_playlist_model;
+
+    QMediaPlayer m_duration_player;
 };
+
 #endif // MAINWINDOW_H
