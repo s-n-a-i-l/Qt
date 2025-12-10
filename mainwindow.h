@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
+    void initPlaylist();
     void loadFileToPlaylist(const QString& filename);
 private slots:
     void on_pushButton_Add_clicked();
@@ -41,11 +41,22 @@ private slots:
 
 
 
+    void on_pushButton_Shuffle_clicked();
+
+    void on_pushButton_Loop_clicked();
+
+    void on_pushButton_Del_clicked();
+
+    void on_pushButton_Clr_clicked();
+
 private:
     Ui::MainWindow *ui;
     QMediaPlayer* m_player;
     QMediaPlaylist *m_playlist;
     QStandardItemModel *m_playlist_model;
+
+    bool shuffle;
+    bool loop;
 
     QMediaPlayer m_duration_player;
 };

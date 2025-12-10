@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    shuffle=false;
+    loop=false;
+
     //Buttons stule:
     ui->pushButton_Add->setIcon(style()->standardIcon(QStyle::SP_DriveCDIcon));
     ui->pushButton_Prev->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
@@ -18,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_Pause->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
     ui->pushButton_Stop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     ui->pushButton_Mute->setIcon(style()->standardIcon(QStyle::SP_MediaVolumeMuted));
+    ui->pushButton_Loop->setIcon(style()->standardIcon(QStyle::SP_BrowserReload));
 
     //Player Init:
     m_player = new QMediaPlayer();
@@ -36,16 +40,17 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // playlist init
-    m_playlist_model = new QStandardItemModel(this);
-    this->ui->tableView_Playlist->setModel(m_playlist_model);// predstavlenie
-    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path" <<"Duration");
-    this->ui->tableView_Playlist->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->ui->tableView_Playlist->setSelectionBehavior(QAbstractItemView::SelectRows);
+      m_playlist_model = new QStandardItemModel(this);
+      initPlaylist();
+//    this->ui->tableView_Playlist->setModel(m_playlist_model);// predstavlenie
+//    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path" <<"Duration");
+//    this->ui->tableView_Playlist->setEditTriggers(QAbstractItemView::NoEditTriggers);
+//    this->ui->tableView_Playlist->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    this->ui->tableView_Playlist->hideColumn(1);
-    int duration_widht = 64;
-    this->ui->tableView_Playlist->setColumnWidth(2, duration_widht);
-    this->ui->tableView_Playlist->setColumnWidth(0, this->ui->tableView_Playlist->width()-duration_widht*1.7);
+//    this->ui->tableView_Playlist->hideColumn(1);
+//    int duration_widht = 64;
+//    this->ui->tableView_Playlist->setColumnWidth(2, duration_widht);
+//    this->ui->tableView_Playlist->setColumnWidth(0, this->ui->tableView_Playlist->width()-duration_widht*1.7);
 
     m_playlist = new QMediaPlaylist(m_player);
     m_player->setPlaylist(m_playlist);
@@ -62,6 +67,8 @@ MainWindow::MainWindow(QWidget *parent)
               this->setWindowTitle(this->ui->label_FileName->text().split('/').last());
             }
     );
+   // connect(this->ui->pushButton_Clr, &QPushButton::clicked, this->m_playlist, &QMediaPlaylist::clear);
+    //connect(this->ui->pushButton_Clr, &QPushButton::clicked, this->m_playlist_model, &QStandardItemModel::clear);
 }
 
 MainWindow::~MainWindow()
@@ -70,6 +77,19 @@ MainWindow::~MainWindow()
     delete m_playlist_model;
     delete m_player;
     delete ui;
+}
+
+void MainWindow::initPlaylist()
+{
+    this->ui->tableView_Playlist->setModel(m_playlist_model);// predstavlenie
+    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path" <<"Duration");
+    this->ui->tableView_Playlist->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->ui->tableView_Playlist->setSelectionBehavior(QAbstractItemView::SelectRows);
+
+    this->ui->tableView_Playlist->hideColumn(1);
+    int duration_widht = 64;
+    this->ui->tableView_Playlist->setColumnWidth(2, duration_widht);
+    this->ui->tableView_Playlist->setColumnWidth(0, this->ui->tableView_Playlist->width()-duration_widht*1.7);
 }
 
 void MainWindow::loadFileToPlaylist(const QString &filename)
@@ -117,7 +137,7 @@ void MainWindow::on_pushButton_Add_clicked()
 
     QStringList files = QFileDialog::getOpenFileNames
             (
-             this,
+                this,
                 "Open file",
                 "E:\\music",
                 "Audio files (*.mp3 *.flac *.flacc);; MP-3 (*.mp3);; Flac (*.flac *.flacc)"
@@ -165,17 +185,51 @@ void MainWindow::on_pushButton_Mute_clicked()
 
 }
 
+void MainWindow::on_pushButton_Shuffle_clicked()
+{
+    shuffle = !shuffle;
+    this->ui->pushButton_Shuffle->setCheckable(true);
+    this->m_playlist->setPlaybackMode(shuffle ? QMediaPlaylist::PlaybackMode::Random : QMediaPlaylist::PlaybackMode::Sequential);
+    this->ui->pushButton_Shuffle->setChecked(shuffle);
+}
 
 
+void MainWindow::on_pushButton_Loop_clicked()
+{
+    loop = !loop;
+    this->ui->pushButton_Loop->setCheckable(true);
+    this->m_playlist->setPlaybackMode(loop?  QMediaPlaylist::PlaybackMode::Loop : QMediaPlaylist::PlaybackMode::Sequential);
+    this->ui->pushButton_Loop->setChecked(loop);
+}
 
 
+void MainWindow::on_pushButton_Del_clicked()
+{
+//   QItemSelectionModel* selection = ui->tableView_Playlist->selectionModel();
+//   QModelIndexList indexes = selection->selectedRows();
+//   for(QModelIndex i:indexes)
+//   {
+//       m_playlist_model->removeRow(i.row());
+//       m_playlist->removeMedia(i.row());
+//   }
+    QItemSelectionModel *selection = nullptr;
+    do
+    {
+        selection = ui->tableView_Playlist->selectionModel();
+        QModelIndexList indexes = selection->selectedRows();
+        if(selection->selectedRows().count() > 0)
+        {
+            m_playlist_model->removeRow(indexes.first().row());
+            m_playlist->removeMedia(indexes.first().row());
+        }
+    }while(selection->selectedRows().count());
+}
 
 
-
-
-
-
-
-
-
+void MainWindow::on_pushButton_Clr_clicked()
+{
+    m_playlist->clear();
+    m_playlist_model->clear();
+    initPlaylist();
+}
 
