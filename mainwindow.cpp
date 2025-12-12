@@ -3,6 +3,7 @@
 #include <QStyle>
 #include <QFileDialog>
 #include <QTime>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -12,6 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     shuffle=false;
     loop=false;
+    //url = QUrl( "E:\\repos\\MediaPlayerPD411\\SavePlaylist\\playlist.m3u");
+
 
     //Buttons stule:
     ui->pushButton_Add->setIcon(style()->standardIcon(QStyle::SP_DriveCDIcon));
@@ -42,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
     // playlist init
       m_playlist_model = new QStandardItemModel(this);
       initPlaylist();
+      //loadPlaylistFromFile("E:\\repos\\MediaPlayerPD411\\SavePlaylist\\playlist.m3u");
 //    this->ui->tableView_Playlist->setModel(m_playlist_model);// predstavlenie
 //    m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path" <<"Duration");
 //    this->ui->tableView_Playlist->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -54,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_playlist = new QMediaPlaylist(m_player);
     m_player->setPlaylist(m_playlist);
+    loadPlaylistFromFile("E:\\repos\\MediaPlayerPD411\\SavePlaylist\\playlist.m3u");
 
     connect(this->ui->pushButton_Prev, &QPushButton::clicked, this->m_playlist, &QMediaPlaylist::previous);
     connect(this->ui->pushButton_Next, &QPushButton::clicked, this->m_playlist, &QMediaPlaylist::next);
@@ -67,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent)
               this->setWindowTitle(this->ui->label_FileName->text().split('/').last());
             }
     );
+
    // connect(this->ui->pushButton_Clr, &QPushButton::clicked, this->m_playlist, &QMediaPlaylist::clear);
     //connect(this->ui->pushButton_Clr, &QPushButton::clicked, this->m_playlist_model, &QStandardItemModel::clear);
 }
@@ -81,6 +87,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initPlaylist()
 {
+
     this->ui->tableView_Playlist->setModel(m_playlist_model);// predstavlenie
     m_playlist_model->setHorizontalHeaderLabels(QStringList() << "Audio track" << "File path" <<"Duration");
     this->ui->tableView_Playlist->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -90,7 +97,10 @@ void MainWindow::initPlaylist()
     int duration_widht = 64;
     this->ui->tableView_Playlist->setColumnWidth(2, duration_widht);
     this->ui->tableView_Playlist->setColumnWidth(0, this->ui->tableView_Playlist->width()-duration_widht*1.7);
+
 }
+
+
 
 void MainWindow::loadFileToPlaylist(const QString &filename)
 {
@@ -99,11 +109,13 @@ void MainWindow::loadFileToPlaylist(const QString &filename)
     items.append(new QStandardItem(QDir(filename).dirName()));
     items.append(new QStandardItem(filename));
     //QMediaPlayer player;
-    m_duration_player.setMedia(QUrl(filename));
-    m_duration_player.play();
-    items.append(new QStandardItem(QTime::fromMSecsSinceStartOfDay(m_duration_player.duration()).toString("mm:ss")));
-    m_duration_player.pause();
+//    m_duration_player.setMedia(QUrl(filename));
+//    m_duration_player.play();
+//    items.append(new QStandardItem(QTime::fromMSecsSinceStartOfDay(m_duration_player.duration()).toString("mm:ss")));
+//    m_duration_player.pause();
     m_playlist_model->appendRow(items);
+
+    savePlaylistToFile("E:\\repos\\MediaPlayerPD411\\SavePlaylist\\playlist.m3u");
 }
 
 void MainWindow::on_diration_changet(qint64 duration)
@@ -231,5 +243,50 @@ void MainWindow::on_pushButton_Clr_clicked()
     m_playlist->clear();
     m_playlist_model->clear();
     initPlaylist();
+}
+
+void MainWindow::savePlaylistToFile(const QString &filePath)
+{
+    bool success = m_playlist->save(QUrl::fromLocalFile(filePath), "m3u");
+
+       if (success) {
+           qDebug() << "Плейлист успешно сохранен в" << filePath;
+       } else {
+
+           qDebug() << "Не удалось сохранить плейлист:" << m_playlist->errorString();
+       }
+}
+
+void MainWindow::loadPlaylistFromFile(const QString &filePath)
+{
+    m_playlist->clear();
+    m_playlist->load(QUrl::fromLocalFile(filePath), "m3u");
+    for (int i = 0; i < m_playlist->mediaCount(); ++i)
+    {
+           QMediaContent content = m_playlist->media(i);
+           QUrl url = content.canonicalUrl();
+
+           QList<QStandardItem*> items;
+
+           QFileInfo fileInfo(url.toLocalFile());
+           items.append(new QStandardItem(fileInfo.fileName()));
+           items.append(new QStandardItem(fileInfo.absoluteFilePath()));
+
+           items.append(new QStandardItem("00:00"));
+
+           m_playlist_model->appendRow(items);
+    }
+}
+
+
+
+void MainWindow::on_pushButton_Dir_clicked()
+{
+    QString directory =
+    QFileDialog::getExistingDirectory(this, tr("Select Music Folder"),
+    QDir::homePath(),
+    QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+
 }
 

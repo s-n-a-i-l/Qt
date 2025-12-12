@@ -49,6 +49,11 @@ private slots:
 
     void on_pushButton_Clr_clicked();
 
+    void savePlaylistToFile(const QString &filePath);
+    void loadPlaylistFromFile(const QString &filePath);
+
+    void on_pushButton_Dir_clicked();
+
 private:
     Ui::MainWindow *ui;
     QMediaPlayer* m_player;
@@ -57,6 +62,7 @@ private:
 
     bool shuffle;
     bool loop;
+   // QUrl url;
 
     QMediaPlayer m_duration_player;
 };
